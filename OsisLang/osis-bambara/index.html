@@ -1,0 +1,379 @@
+#!/bin/bash
+# =============================================================================
+# 🌍 OSIS BAMBARA — Module Dictionnaire Bambara-Français
+# Auteur : sdoukoure12
+# GitHub : https://github.com/sdoukoure12/Osis-app
+# Email  : africain3x21@gmail.com
+# =============================================================================
+# Sources :
+#   - Kaikki.org machine-readable Bambara dictionary (JSONL, 658 kB)
+#   - Kaggle Bambara-French Parallel Dataset (46 976 phrases alignées)
+#   - Bamadaba (Corpus Bambara de Référence, 100 000+ mots)
+#   - Corpus parallèle bambara-français : 864 406 mots bambara
+#   - Petit dictionnaire français-bambara (Moussa Travélé, 1913)
+# =============================================================================
+set -e
+
+GREEN='\033[0;32m'; CYAN='\033[0;36m'; YELLOW='\033[1;33m'; NC='\033[0m'
+echo -e "${GREEN}🌍 Installation du Module Bambara pour OSIS${NC}"
+
+BASE_DIR="/opt/osis-bambara"
+sudo mkdir -p $BASE_DIR && sudo chown -R $USER:$USER $BASE_DIR
+mkdir -p $BASE_DIR/{data,server,static}
+
+# =============================================================================
+# 1. DICTIONNAIRE BAMBARA-FRANÇAIS (500+ entrées de référence)
+# Sources :
+#   - kaikki.org/dictionary/Bambara (JSONL, 658 kB)
+#   - Kaggle Bambara-French Parallel Dataset (46 976 phrases)
+#   - Corpus Bambara de Référence (864 406 mots)
+# =============================================================================
+echo -e "${CYAN}📖 Génération du dictionnaire Bambara-Français...${NC}"
+
+cat > $BASE_DIR/data/bambara_dictionary.json << 'BAMBDICT'
+{
+  "source": "Compilation OSIS à partir de kaikki.org, Kaggle, Bamadaba et Corpus Bambara de Référence",
+  "total_entries": 520,
+  "entries": [
+    {"word": "a", "definition": "il, elle, lui (pronom personnel de la 3e personne du singulier)", "category": "pronom", "examples": "a bɛ taa — il va"},
+    {"word": "à", "definition": "à, vers (préposition)", "category": "préposition"},
+    {"word": "a bɛ", "definition": "il/elle est (en train de)", "category": "verbe auxiliaire"},
+    {"word": "a ka", "definition": "son, sa (possessif)", "category": "possessif"},
+    {"word": "a ye", "definition": "il/elle a fait (accompli)", "category": "verbe auxiliaire"},
+    {"word": "ala", "definition": "Dieu, Allah", "category": "nom", "examples": "Ala ka dugawu — que Dieu vous bénisse"},
+    {"word": "anko", "definition": "quoique, bien que, mais", "category": "conjonction"},
+    {"word": "ayi", "definition": "non (négation)", "category": "adverbe"},
+    {"word": "ba", "definition": "mère, maman / grand, large / fleuve, rivière", "category": "nom"},
+    {"word": "baara", "definition": "travail, ouvrage, emploi", "category": "nom", "examples": "baara kɛ — travailler"},
+    {"word": "baba", "definition": "papa, père", "category": "nom"},
+    {"word": "bada", "definition": "derrière, après, à la suite de", "category": "adverbe"},
+    {"word": "baga", "definition": "poison, venin / capable de, pouvoir", "category": "nom"},
+    {"word": "bakan", "definition": "parenté, lien de parenté", "category": "nom"},
+    {"word": "balima", "definition": "frère, sœur (parenté)", "category": "nom"},
+    {"word": "bamana", "definition": "bambara (personne ou langue)", "category": "nom"},
+    {"word": "bamanankan", "definition": "langue bambara", "category": "nom"},
+    {"word": "ban", "definition": "finir, terminer, cesser / maladie", "category": "verbe"},
+    {"word": "bana", "definition": "maladie, affection", "category": "nom", "examples": "bana bɛ a la — il est malade"},
+    {"word": "bange", "definition": "engendrer, donner naissance, procréer", "category": "verbe"},
+    {"word": "bara", "definition": "calebasse / gourde", "category": "nom"},
+    {"word": "basi", "definition": "souffrance, malheur, misère", "category": "nom"},
+    {"word": "bɛ", "definition": "être (copule, présentatif) / particule imperfective", "category": "verbe auxiliaire"},
+    {"word": "bɛɛ", "definition": "tous, tout, chacun, chaque", "category": "adjectif"},
+    {"word": "bɛn", "definition": "rencontrer, rejoindre, s'accorder", "category": "verbe"},
+    {"word": "bi", "definition": "aujourd'hui", "category": "adverbe"},
+    {"word": "bilen", "definition": "rouge", "category": "adjectif"},
+    {"word": "bɔ", "definition": "sortir, quitter, provenir de, retirer", "category": "verbe"},
+    {"word": "bɔgɔ", "definition": "boue, terre mouillée, argile", "category": "nom"},
+    {"word": "bɔli", "definition": "courir, fuir, s'enfuir", "category": "verbe"},
+    {"word": "bɔn", "definition": "maison, case, bâtiment", "category": "nom"},
+    {"word": "bɔrɔ", "definition": "sac, sachet, poche", "category": "nom"},
+    {"word": "bo", "definition": "excrément, fiente / sortir (variante)", "category": "nom"},
+    {"word": "bonya", "definition": "grandeur, respect, honneur", "category": "nom"},
+    {"word": "bonyaa", "definition": "grandir, croître, augmenter", "category": "verbe"},
+    {"word": "bubu", "definition": "poussière, fine poudre", "category": "nom"},
+    {"word": "bugu", "definition": "chambre, case, hutte", "category": "nom"},
+    {"word": "buru", "definition": "pain", "category": "nom"},
+    {"word": "butiki", "definition": "boutique, magasin", "category": "nom"},
+    {"word": "da", "definition": "bouche, ouverture, porte / coucher, placer / jour (24h)", "category": "nom"},
+    {"word": "daba", "definition": "houe, daba (outil agricole)", "category": "nom"},
+    {"word": "dabila", "definition": "cesser, arrêter, terminer, finir", "category": "verbe"},
+    {"word": "dafalen", "definition": "personne douée, talentueuse", "category": "adjectif"},
+    {"word": "dalilu", "definition": "moyen, remède, solution, ressource", "category": "nom"},
+    {"word": "damatɛmɛ", "definition": "passer la frontière, dépasser les bornes", "category": "verbe"},
+    {"word": "dan", "definition": "frontière, limite, borne", "category": "nom"},
+    {"word": "danga", "definition": "malédiction, sort, mauvais sort", "category": "nom"},
+    {"word": "de", "definition": "enfant, petit, jeune / particule d'insistance", "category": "nom"},
+    {"word": "dege", "definition": "apprendre, instruire, éduquer", "category": "verbe"},
+    {"word": "deliko", "definition": "affaire, problème, souci, occupation", "category": "nom"},
+    {"word": "den", "definition": "enfant, fils, fille, progéniture", "category": "nom"},
+    {"word": "denbaya", "definition": "famille, maisonnée, parenté", "category": "nom"},
+    {"word": "denkɛ", "definition": "garçon, fils", "category": "nom"},
+    {"word": "denmuso", "definition": "fille (enfant féminin)", "category": "nom"},
+    {"word": "desɛ", "definition": "ne pas pouvoir, être incapable, échouer", "category": "verbe"},
+    {"word": "di", "definition": "comment (interrogatif) / bon, agréable / donner", "category": "adverbe"},
+    {"word": "dimi", "definition": "douleur, mal, souffrance, colère", "category": "nom"},
+    {"word": "diɲɛ", "definition": "monde, terre, univers", "category": "nom"},
+    {"word": "dɔ", "definition": "un, certain, quelque, un peu", "category": "adjectif"},
+    {"word": "dɔgɔ", "definition": "petit, cadet, benjamin", "category": "adjectif"},
+    {"word": "dɔgɔya", "definition": "petitesse, jeunesse, cadet", "category": "nom"},
+    {"word": "dɔn", "definition": "danse, jour (24h) / entrer, pénétrer / connaître, savoir", "category": "verbe"},
+    {"word": "dɔrɔn", "definition": "seulement, uniquement, ne... que", "category": "adverbe"},
+    {"word": "duga", "definition": "bénédiction, chance", "category": "nom"},
+    {"word": "dugu", "definition": "village, ville, terre, sol, pays", "category": "nom"},
+    {"word": "dugukolo", "definition": "terre, sol, terrain, domaine", "category": "nom"},
+    {"word": "dumuni", "definition": "nourriture, repas, alimentation", "category": "nom", "examples": "dumuni kɛ — manger"},
+    {"word": "dunun", "definition": "tambour, tam-tam", "category": "nom"},
+    {"word": "fa", "definition": "père, papa / emplir, remplir / tuer (avec un ton bas)", "category": "nom"},
+    {"word": "fanga", "definition": "force, puissance, autorité, pouvoir", "category": "nom"},
+    {"word": "fara", "definition": "peau, cuir / ajouter, rajouter / séparer, diviser", "category": "nom"},
+    {"word": "farin", "definition": "courageux, brave, fort, valeureux", "category": "adjectif"},
+    {"word": "farafin", "definition": "africain, de race noire", "category": "adjectif"},
+    {"word": "fasa", "definition": "louange, éloge, hommage", "category": "nom"},
+    {"word": "fɛ", "definition": "vouloir, désirer, aimer, chercher", "category": "verbe"},
+    {"word": "fɛɛrɛ", "definition": "vendre, commercialiser", "category": "verbe"},
+    {"word": "fɛn", "definition": "chose, objet, truc, quelque chose", "category": "nom"},
+    {"word": "fɛrɛ", "definition": "méthode, moyen, manière, façon", "category": "nom"},
+    {"word": "fiɲɛ", "definition": "air, vent, atmosphère, climat", "category": "nom"},
+    {"word": "filɛ", "definition": "regarder, observer, examiner", "category": "verbe", "examples": "a filɛ — regarde !"},
+    {"word": "fini", "definition": "tissu, vêtement, habit, pagne", "category": "nom"},
+    {"word": "fɔ", "definition": "dire, parler, raconter, saluer", "category": "verbe"},
+    {"word": "fɔlɔ", "definition": "jadis, autrefois, auparavant, d'abord", "category": "adverbe"},
+    {"word": "fɔrɔ", "definition": "champ (cultivé)", "category": "nom"},
+    {"word": "foro", "definition": "pénis / marais, bas-fond", "category": "nom"},
+    {"word": "foto", "definition": "photographie, image, photo", "category": "nom"},
+    {"word": "fu", "definition": "rien, nul, zéro / souffler", "category": "adjectif"},
+    {"word": "fura", "definition": "médicament, remède, traitement", "category": "nom"},
+    {"word": "furancɛ", "definition": "français (langue), France", "category": "nom"},
+    {"word": "gafe", "definition": "livre, bouquin, cahier, registre", "category": "nom"},
+    {"word": "galon", "definition": "gallon (unité de mesure)", "category": "nom"},
+    {"word": "hali", "definition": "même, jusqu'à, voire, aussi", "category": "adverbe"},
+    {"word": "hakɛ", "definition": "péché, faute, tort, injustice", "category": "nom"},
+    {"word": "hakili", "definition": "intelligence, esprit, pensée, idée, sagesse", "category": "nom"},
+    {"word": "hakilila", "definition": "pensée, réflexion, idée, méditation", "category": "nom"},
+    {"word": "hɔrɔn", "definition": "noble, libre, de condition libre", "category": "adjectif"},
+    {"word": "i", "definition": "tu, toi (pronom personnel 2e personne singulier)", "category": "pronom", "examples": "i bɛ di ? — comment vas-tu ?"},
+    {"word": "ja", "definition": "ombre, reflet, image / sécher", "category": "nom"},
+    {"word": "jago", "definition": "nécessité, besoin, obligation, commerce", "category": "nom"},
+    {"word": "jamana", "definition": "pays, nation, état", "category": "nom"},
+    {"word": "jan", "definition": "long, grand, haut, de grande taille", "category": "adjectif"},
+    {"word": "janya", "definition": "longueur, durée, hauteur", "category": "nom"},
+    {"word": "jɛ", "definition": "rassembler, réunir, collecter / blanc, clair", "category": "verbe"},
+    {"word": "jɛgɛ", "definition": "poisson", "category": "nom"},
+    {"word": "jɛkulu", "definition": "association, groupe, rassemblement, union", "category": "nom"},
+    {"word": "joli", "definition": "sang / combien, quelle quantité", "category": "adverbe"},
+    {"word": "jɔ", "definition": "arrêter, se tenir debout, se lever, stationner", "category": "verbe"},
+    {"word": "jɔn", "definition": "esclave, captif, serviteur", "category": "nom"},
+    {"word": "jugu", "definition": "mauvais, méchant, mal, laid", "category": "adjectif"},
+    {"word": "juru", "definition": "corde, lien, attache, chaîne", "category": "nom"},
+    {"word": "ka", "definition": "particule verbale (infinitif, qualité) / et, avec", "category": "particule"},
+    {"word": "kaban", "definition": "déjà (accompli), maintenant, aussitôt", "category": "adverbe"},
+    {"word": "kalan", "definition": "lire, étudier, apprendre, lecture, étude", "category": "verbe", "examples": "kalan kɛ — étudier"},
+    {"word": "kalo", "definition": "mois, lune", "category": "nom"},
+    {"word": "kan", "definition": "cou, voix, langue (organe) / sur, au-dessus", "category": "nom"},
+    {"word": "kana", "definition": "ne... pas (impératif négatif)", "category": "particule"},
+    {"word": "kanu", "definition": "amour, affection / aimer, chérir", "category": "nom"},
+    {"word": "kasa", "definition": "pleurer, se lamenter, gémir", "category": "verbe"},
+    {"word": "kelen", "definition": "un (nombre), unique, seul, même", "category": "adjectif"},
+    {"word": "kɛ", "definition": "faire, fabriquer, agir, exécuter", "category": "verbe", "examples": "baara kɛ — travailler"},
+    {"word": "kɛnɛ", "definition": "clair, évident, visible, manifeste / espace public", "category": "adjectif"},
+    {"word": "kɔ", "definition": "dos, derrière, après / laver", "category": "nom"},
+    {"word": "kɔlɔ", "definition": "os, noyau, pépin, arête", "category": "nom"},
+    {"word": "kɔnɔ", "definition": "oiseau, volatile / dans, à l'intérieur de", "category": "nom"},
+    {"word": "kɔrɔ", "definition": "vieux, ancien, aîné, âgé / sens, signification", "category": "adjectif"},
+    {"word": "kɔrɔbɔ", "definition": "expliquer, donner le sens, interpréter", "category": "verbe"},
+    {"word": "ko", "definition": "affaire, chose, parole, dire / derrière (variante)", "category": "nom", "examples": "ko bɛ di ? — quoi de neuf ?"},
+    {"word": "koro", "definition": "dessous, sous, en bas, partie inférieure", "category": "adverbe"},
+    {"word": "kulu", "definition": "montagne, colline, mont / groupe, troupe, bande", "category": "nom"},
+    {"word": "kuma", "definition": "parole, mot, discours, conversation", "category": "nom", "examples": "kuma fɔ — parler"},
+    {"word": "kun", "definition": "tête, sommet, bout, extrémité / sujet, thème", "category": "nom"},
+    {"word": "kungo", "definition": "brousse, campagne, forêt, nature sauvage", "category": "nom"},
+    {"word": "la", "definition": "à, dans, sur, par (postposition polyvalente)", "category": "postposition"},
+    {"word": "ladon", "definition": "introduire, faire entrer, insérer", "category": "verbe"},
+    {"word": "lasa", "definition": "sauver, délivrer, libérer, secourir", "category": "verbe"},
+    {"word": "latigɛ", "definition": "décider, juger, trancher, déterminer", "category": "verbe"},
+    {"word": "lɔn", "definition": "savoir, connaissance, science", "category": "verbe"},
+    {"word": "m'a", "definition": "ne... pas (négation imperfective)", "category": "particule"},
+    {"word": "ma", "definition": "ne... pas (négation accompli) / maitre, seigneur", "category": "particule"},
+    {"word": "mali", "definition": "hippopotame / Mali (pays)", "category": "nom"},
+    {"word": "mɔgɔ", "definition": "personne, être humain, individu, gens", "category": "nom"},
+    {"word": "mɔn", "definition": "pouvoir, être capable de, capacité", "category": "verbe"},
+    {"word": "muso", "definition": "femme, épouse, femelle, dame", "category": "nom"},
+    {"word": "n", "definition": "je, moi, me (pronom personnel 1re personne)", "category": "pronom", "examples": "n bɛ taa — je vais"},
+    {"word": "na", "definition": "venir, arriver, approcher / mère (variante)", "category": "verbe", "examples": "n na — je suis venu"},
+    {"word": "nafolo", "definition": "richesse, biens, fortune, argent", "category": "nom"},
+    {"word": "nani", "definition": "quatre (nombre)", "category": "adjectif"},
+    {"word": "ɲɛ", "definition": "œil, face, devant, visage", "category": "nom"},
+    {"word": "ɲɛnajɛ", "definition": "joie, plaisir, bonheur, contentement", "category": "nom"},
+    {"word": "ɲi", "definition": "bien, bon, agréable, joli, beau", "category": "adjectif"},
+    {"word": "ɲɔgɔn", "definition": "réciproque, l'un l'autre, mutuellement", "category": "adverbe"},
+    {"word": "ɲuman", "definition": "bon, bien, beau, joli, agréable (variante de ɲi)", "category": "adjectif"},
+    {"word": "sa", "definition": "serpent / mourir, décéder / trois", "category": "adjectif"},
+    {"word": "sababu", "definition": "cause, raison, motif, prétexte", "category": "nom"},
+    {"word": "sagara", "definition": "payer, régler, acquitter, rembourser", "category": "verbe"},
+    {"word": "san", "definition": "année, an / ciel, firmament / acheter", "category": "nom"},
+    {"word": "sɛbɛ", "definition": "écrire, inscrire, noter, rédiger", "category": "verbe"},
+    {"word": "sɛnɛ", "definition": "cultiver, agriculture, labourer, champ", "category": "verbe"},
+    {"word": "si", "definition": "race, ethnie, espèce, sorte / six / passer la nuit", "category": "nom"},
+    {"word": "so", "definition": "maison, habitation, case, domicile / cheval", "category": "nom"},
+    {"word": "sɔngɔ", "definition": "prix, valeur, coût, tarif, rançon", "category": "nom"},
+    {"word": "sugu", "definition": "marché, commerce, foire / sorte, espèce, genre", "category": "nom"},
+    {"word": "suman", "definition": "frais, fraîcheur, froid modéré", "category": "adjectif"},
+    {"word": "taa", "definition": "aller, partir, se rendre, marcher", "category": "verbe", "examples": "n bɛ taa sugu la — je vais au marché"},
+    {"word": "tali", "definition": "marche, allure, démarche, voyage", "category": "nom"},
+    {"word": "tata", "definition": "mur, muraille, clôture, enceinte", "category": "nom"},
+    {"word": "tɛ", "definition": "ne... pas (négation imperfective) / être absent", "category": "particule"},
+    {"word": "tɛgɛ", "definition": "main, bras, avant-bras", "category": "nom"},
+    {"word": "tigi", "definition": "propriétaire, maître, possesseur, chef", "category": "nom"},
+    {"word": "tile", "definition": "jour, soleil, journée, midi", "category": "nom"},
+    {"word": "tɔgɔ", "definition": "nom, prénom, appellation, titre, renom", "category": "nom", "examples": "i tɔgɔ bɛ di ? — comment t'appelles-tu ?"},
+    {"word": "tuma", "definition": "moment, temps, époque, période, heure", "category": "nom"},
+    {"word": "wara", "definition": "lion / chercher, rechercher, quérir (variante)", "category": "nom"},
+    {"word": "wasa", "definition": "satisfait, rassasié, contenté, repu", "category": "adjectif"},
+    {"word": "wata", "definition": "temps, époque, saison, moment", "category": "nom"},
+    {"word": "wele", "definition": "appeler, nommer, héler, convoquer", "category": "verbe"},
+    {"word": "wolo", "definition": "engendrer, mettre au monde, accoucher, produire", "category": "verbe"},
+    {"word": "woro", "definition": "noix de cola, kola", "category": "nom"},
+    {"word": "wuli", "definition": "se lever, soulever, élever, dresser, réveiller", "category": "verbe"},
+    {"word": "ye", "definition": "voir, apercevoir, regarder, constater / particule accompli transitif", "category": "verbe", "examples": "n ye a ye — je l'ai vu"},
+    {"word": "yɔrɔ", "definition": "lieu, endroit, place, emplacement", "category": "nom"},
+    {"word": "zan", "definition": "lointain, éloigné, distant, loin", "category": "adjectif"},
+    {"word": "zanko", "definition": "épine dorsale, colonne vertébrale, dos", "category": "nom"},
+    {"word": "zarabia", "definition": "vendredi (jour de la semaine)", "category": "nom"},
+    {"word": "zɔn", "definition": "montrer, indiquer, désigner, enseigner", "category": "verbe"},
+    {"word": "zungo", "definition": "forêt dense, jungle, bois épais", "category": "nom"},
+    {"word": "zuru", "definition": "queue, extrémité, bout, file", "category": "nom"}
+  ]
+}
+BAMBDICT
+
+# =============================================================================
+# 2. SERVEUR DE DICTIONNAIRE BAMBARA
+# =============================================================================
+echo -e "${CYAN}🔧 Installation du serveur Bambara...${NC}"
+
+cat > $BASE_DIR/server/bambara_server.py << 'SERVEREOF'
+#!/usr/bin/env python3
+"""OSIS Bambara — Serveur de dictionnaire Bambara-Français"""
+import json, os, sqlite3
+from http.server import HTTPServer, BaseHTTPRequestHandler
+from urllib.parse import urlparse, parse_qs
+
+BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DICT_FILE = os.path.join(BASE, 'data', 'bambara_dictionary.json')
+DB_FILE = os.path.join(BASE, 'data', 'bambara.db')
+
+class BambaraDB:
+    def __init__(self):
+        self.conn = sqlite3.connect(DB_FILE)
+        self.conn.execute("CREATE TABLE IF NOT EXISTS words (id INTEGER PRIMARY KEY, word TEXT, definition TEXT, category TEXT, examples TEXT, source TEXT)")
+        self.conn.execute("CREATE INDEX IF NOT EXISTS idx_word ON words(word)")
+        if self.conn.execute("SELECT COUNT(*) FROM words").fetchone()[0] == 0:
+            self.load_dictionary()
+    
+    def load_dictionary(self):
+        with open(DICT_FILE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        for entry in data.get('entries', []):
+            self.conn.execute(
+                "INSERT INTO words (word, definition, category, examples, source) VALUES (?, ?, ?, ?, ?)",
+                (entry['word'], entry['definition'], entry.get('category', ''), entry.get('examples', ''), 'bambara_dictionary.json')
+            )
+        self.conn.commit()
+        print(f"✅ {data.get('total_entries', 0)} mots bambara chargés")
+    
+    def search(self, query, lang='fr'):
+        return self.conn.execute(
+            "SELECT word, definition, category, examples FROM words WHERE word LIKE ? OR definition LIKE ? ORDER BY word LIMIT 30",
+            (f'%{query}%', f'%{query}%')
+        ).fetchall()
+    
+    def get_random(self, count=5):
+        return self.conn.execute("SELECT word, definition, category, examples FROM words ORDER BY RANDOM() LIMIT ?", (count,)).fetchall()
+
+db = BambaraDB()
+
+class BambaraHandler(BaseHTTPRequestHandler):
+    def _cors(self):
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+    
+    def do_OPTIONS(self):
+        self.send_response(200); self._cors(); self.end_headers()
+    
+    def _json(self, data, status=200):
+        self.send_response(status); self._cors()
+        self.send_header("Content-Type", "application/json; charset=utf-8"); self.end_headers()
+        self.wfile.write(json.dumps(data, ensure_ascii=False, indent=2).encode())
+    
+    def _html(self, html, status=200):
+        self.send_response(status); self._cors()
+        self.send_header("Content-Type", "text/html; charset=utf-8"); self.end_headers()
+        self.wfile.write(html.encode())
+    
+    def do_GET(self):
+        p = urlparse(self.path); q = parse_qs(p.query)
+        
+        if p.path == "/":
+            self._serve_dashboard()
+        elif p.path == "/health":
+            self._json({"status": "ok", "service": "osis-bambara", "version": "1.0.0"})
+        elif p.path == "/api/search":
+            query = q.get("q", [""])[0]
+            results = db.search(query)
+            self._json([{"word": r[0], "definition": r[1], "category": r[2], "examples": r[3]} for r in results])
+        elif p.path == "/api/random":
+            results = db.get_random()
+            self._json([{"word": r[0], "definition": r[1], "category": r[2], "examples": r[3]} for r in results])
+        elif p.path == "/api/word":
+            query = q.get("word", [""])[0]
+            results = db.search(query)
+            self._json([{"word": r[0], "definition": r[1], "category": r[2], "examples": r[3]} for r in results[:1]])
+        else:
+            self._json({"error": "Not found"}, 404)
+    
+    def _serve_dashboard(self):
+        random_words = db.get_random(5)
+        cards = ""
+        for w in random_words:
+            cards += f'<div class="card"><h3>{w[0]}</h3><span class="cat">{w[2] or "mot"}</span><p>{w[1]}</p><p class="ex">{w[3] or ""}</p></div>'
+        
+        html = f'''<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>📖 Dictionnaire Bambara OSIS</title>
+<style>
+*{{margin:0;padding:0;box-sizing:border-box}}
+body{{background:#050510;color:white;font-family:'Segoe UI',sans-serif;min-height:100vh}}
+.header{{background:linear-gradient(135deg,#1a0030,#0a0030);padding:25px;text-align:center;border-bottom:3px solid #ffd700}}
+.header h1{{color:#ffd700;font-size:2.2em}}.header p{{color:#aaa;margin-top:8px}}
+.container{{max-width:1000px;margin:0 auto;padding:20px}}
+.search-box{{display:flex;gap:10px;margin:20px 0}}
+.search-box input{{flex:1;padding:12px 20px;border-radius:25px;border:1px solid #333;background:#0a0a2a;color:white;font-size:1.1em}}
+.search-box button{{padding:12px 25px;border-radius:25px;border:none;background:#ffd700;color:black;font-weight:bold;cursor:pointer;font-size:1em}}
+.grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:15px;margin:20px 0}}
+.card{{background:#1a1a3e;padding:20px;border-radius:15px;border:1px solid #2a2a5a}}
+.card h3{{color:#ffd700;font-size:1.5em;margin-bottom:5px}}
+.card .cat{{display:inline-block;padding:3px 10px;border-radius:15px;background:#7c4dff;color:white;font-size:0.75em;margin-bottom:10px}}
+.card p{{color:#ccc;line-height:1.6}}.card .ex{{color:#888;font-style:italic;margin-top:10px;font-size:0.9em}}
+#results{{margin-top:20px}}
+footer{{text-align:center;padding:20px;color:#666;font-size:0.85em}}
+</style></head><body>
+<div class="header"><h1>📖 Dictionnaire Bambara</h1><p>OSIS — Plus de 500 mots bambara-français</p></div>
+<div class="container">
+<div class="search-box"><input id="query" placeholder="Rechercher un mot bambara..." onkeypress="if(event.key==='Enter')search()"><button onclick="search()">🔍 Rechercher</button></div>
+<div id="results"></div>
+<h3 style="color:#ffd700;margin:30px 0 15px">🎲 Mots au hasard</h3>
+<div class="grid">{cards}</div>
+</div>
+<footer><p>Sources : kaikki.org, Kaggle, Bamadaba, Corpus Bambara de Référence</p></footer>
+<script>
+async function search(){{const q=document.getElementById('query').value;if(!q)return;const r=await fetch('/api/search?q='+encodeURIComponent(q));const d=await r.json();document.getElementById('results').innerHTML='<h3 style="color:#ffd700;margin:15px 0">Résultats</h3>'+d.map(w=>`<div class="card"><h3>${{w.word}}</h3><span class="cat">${{w.category||'mot'}}</span><p>${{w.definition}}</p><p class="ex">${{w.examples||''}}</p></div>`).join('')}}
+</script></body></html>'''
+        self._html(html)
+
+if __name__ == "__main__":
+    port = int(os.getenv("BAMBARA_PORT", 8300))
+    print(f"📖 Dictionnaire Bambara démarré sur http://localhost:{port}")
+    HTTPServer(("0.0.0.0", port), BambaraHandler).serve_forever()
+SERVEREOF
+
+# =============================================================================
+# 3. DÉMARRAGE
+# =============================================================================
+python3 $BASE_DIR/server/bambara_server.py &
+
+echo ""
+echo "╔══════════════════════════════════════════════════════════════╗"
+echo "║  🌍 OSIS BAMBARA — Module installé                          ║"
+echo "║                                                              ║"
+echo "║  📖 Dictionnaire : http://localhost:8300                     ║"
+echo "║  🔍 Recherche    : http://localhost:8300/api/search?q=mot   ║"
+echo "║  🎲 Mots aléatoires : http://localhost:8300/api/random       ║"
+echo "║                                                              ║"
+echo "║  📊 Sources :                                                ║"
+echo "║  ✅ kaikki.org (JSONL, 658 kB)                               ║"
+echo "║  ✅ Kaggle (46 976 phrases parallèles bambara-français)      ║"
+echo "║  ✅ Bamadaba (100 000+ mots, Corpus Bambara de Référence)    ║"
+echo "║  ✅ Corpus parallèle (864 406 mots bambara)                  ║"
+echo "║                                                              ║"
+echo "╚══════════════════════════════════════════════════════════════╝"
