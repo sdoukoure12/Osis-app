@@ -1,0 +1,419 @@
+#!/bin/bash
+# =============================================================================
+# 🌲 OSIS-PRO — COMPLÉTION ÉTAPE PAR ÉTAPE (Documentation, Admin, Monitoring, etc.)
+# Auteur : sdoukoure12
+# Ce script crée les fichiers et dossiers pour les éléments restants.
+# =============================================================================
+set -e
+
+GREEN='\033[0;32m'; CYAN='\033[0;36m'; YELLOW='\033[1;33m'; NC='\033[0m'
+
+BASE_DIR="Osis-Pro"
+if [ ! -d "$BASE_DIR" ]; then
+    echo "❌ Le dossier $BASE_DIR est introuvable. Exécutez d'abord le script de création du dépôt."
+    exit 1
+fi
+
+cd "$BASE_DIR"
+echo -e "${GREEN}🌲 Création des modules restants pour OSIS-PRO${NC}"
+
+# ===========================================================================
+# 1. DOCUMENTATION EXHAUSTIVE
+# ===========================================================================
+echo -e "${CYAN}📚 1/10 — Documentation exhaustive${NC}"
+mkdir -p docs/{user-guide,developer-guide,api-reference,blockchain,deployment,faq}
+cat > docs/user-guide/index.md << 'EOF'
+# Guide Utilisateur OSIS-PRO
+
+Bienvenue dans le guide utilisateur d'OSIS-PRO.
+
+## Table des matières
+- [Premiers pas](getting-started.md)
+- [Créer un compte](account.md)
+- [Gagner des OLC](earning.md)
+- [Utiliser le dictionnaire](dictionary.md)
+- [Créer une intention](intentions.md)
+- [Faire un don](donations.md)
+- [Crédits carbone](carbon.md)
+- [Marketplace artisanale](artisan.md)
+- [Application mobile](mobile.md)
+- [FAQ](faq.md)
+EOF
+
+cat > docs/developer-guide/index.md << 'EOF'
+# Guide Développeur OSIS-PRO
+
+## Table des matières
+- [Architecture](architecture.md)
+- [Installation](installation.md)
+- [Backend API](backend.md)
+- [Blockchain](blockchain.md)
+- [OsisLang](osislang.md)
+- [Modules complémentaires](modules.md)
+- [Tests](testing.md)
+- [Déploiement](deployment.md)
+- [Contribution](contributing.md)
+EOF
+
+cat > docs/api-reference/index.md << 'EOF'
+# Référence API OSIS-PRO
+
+## Endpoints
+- [Authentification](auth.md)
+- [Utilisateurs](users.md)
+- [Wallet / Korki](wallet.md)
+- [Intentions](intentions-api.md)
+- [Dictionnaire](dictionary-api.md)
+- [Dons](donations-api.md)
+- [Blockchain](blockchain-api.md)
+- [Crédits Carbone](carbon-api.md)
+- [Artisanat](artisan-api.md)
+EOF
+
+echo "   ✅ Structure de documentation créée"
+
+# ===========================================================================
+# 2. INTERFACE D'ADMINISTRATION AVANCÉE
+# ===========================================================================
+echo -e "${CYAN}⚙️ 2/10 — Interface d'administration avancée${NC}"
+mkdir -p admin/{static,templates}
+cat > admin/app.py << 'EOF'
+#!/usr/bin/env python3
+"""OSIS-PRO Admin Panel (Flask)"""
+from flask import Flask, render_template, jsonify, request
+from flask_cors import CORS
+import sqlite3, os
+
+app = Flask(__name__)
+CORS(app)
+DATABASE = os.path.join(os.path.dirname(__file__), '..', 'backend', 'data', 'osis.db')
+
+def get_db():
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+@app.route('/')
+def index():
+    return render_template('dashboard.html')
+
+@app.route('/api/admin/stats')
+def stats():
+    db = get_db()
+    users = db.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+    intentions = db.execute("SELECT COUNT(*) FROM intentions WHERE status='active'").fetchone()[0]
+    donations = db.execute("SELECT COALESCE(SUM(amount),0) FROM donations").fetchone()[0]
+    return jsonify({'users': users, 'intentions': intentions, 'donations': donations})
+
+@app.route('/api/admin/users')
+def users():
+    db = get_db()
+    rows = db.execute("SELECT id, username, email, balance, level FROM users ORDER BY id DESC LIMIT 50").fetchall()
+    return jsonify([dict(r) for r in rows])
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=8001, debug=False)
+EOF
+
+cat > admin/templates/dashboard.html << 'EOF'
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>⚙️ OSIS-PRO Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-dark text-white">
+    <div class="container py-4">
+        <h1>⚙️ Administration OSIS-PRO</h1>
+        <div class="row mt-4" id="kpis"></div>
+        <h2 class="mt-4">👥 Utilisateurs récents</h2>
+        <table class="table table-dark table-striped" id="usersTable"></table>
+    </div>
+    <script>
+        fetch('/api/admin/stats').then(r=>r.json()).then(d=>{
+            document.getElementById('kpis').innerHTML = `
+                <div class="col-md-4"><div class="card bg-primary text-white p-3"><h3>${d.users}</h3><p>Utilisateurs</p></div></div>
+                <div class="col-md-4"><div class="card bg-success text-white p-3"><h3>${d.intentions}</h3><p>Intentions actives</p></div></div>
+                <div class="col-md-4"><div class="card bg-warning text-dark p-3"><h3>${d.donations}</h3><p>Total dons (OLC)</p></div></div>`;
+        });
+        fetch('/api/admin/users').then(r=>r.json()).then(users=>{
+            let html = '<thead><tr><th>ID</th><th>Nom</th><th>Email</th><th>Solde</th><th>Niveau</th></tr></thead><tbody>';
+            users.forEach(u=> html += `<tr><td>${u.id}</td><td>${u.username}</td><td>${u.email}</td><td>${u.balance}</td><td>${u.level}</td></tr>`);
+            html += '</tbody>';
+            document.getElementById('usersTable').innerHTML = html;
+        });
+    </script>
+</body>
+</html>
+EOF
+echo "   ✅ Panel admin créé (port 8001)"
+
+# ===========================================================================
+# 3. MONITORING ET LOGGING
+# ===========================================================================
+echo -e "${CYAN}📊 3/10 — Monitoring et logging${NC}"
+mkdir -p monitoring
+cat > monitoring/config.yml << 'EOF'
+# Prometheus
+global:
+  scrape_interval: 15s
+scrape_configs:
+  - job_name: 'osis-backend'
+    static_configs:
+      - targets: ['localhost:8000']
+  - job_name: 'osis-admin'
+    static_configs:
+      - targets: ['localhost:8001']
+EOF
+
+cat > monitoring/README.md << 'EOF'
+# Monitoring OSIS-PRO
+
+Pour lancer Prometheus :prometheus --config.file=monitoring/config.yml
+
+Grafana peut être connecté ensuite sur le port 9090.
+EOF
+echo "   ✅ Configuration Prometheus créée"
+
+# ===========================================================================
+# 4. OPTIMISATIONS DE PERFORMANCE
+# ===========================================================================
+echo -e "${CYAN}⚡ 4/10 — Optimisations de performance${NC}"
+mkdir -p performance
+cat > performance/caching.py << 'EOF'
+#!/usr/bin/env python3
+"""Cache Redis pour les endpoints fréquents"""
+import redis
+import os
+from functools import wraps
+import json
+
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+r = redis.from_url(REDIS_URL)
+
+def cache_response(ttl=60):
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            key = f.__name__ + str(args) + str(kwargs)
+            cached = r.get(key)
+            if cached:
+                return json.loads(cached)
+            result = f(*args, **kwargs)
+            r.setex(key, ttl, json.dumps(result))
+            return result
+        return decorated
+    return decorator
+
+# Exemple d'utilisation :
+# @cache_response(ttl=30)
+# def get_stats():
+#     ...
+EOF
+echo "   ✅ Cache Redis configuré"
+
+# ===========================================================================
+# 5. SCALABILITÉ
+# ===========================================================================
+echo -e "${CYAN}📈 5/10 — Scalabilité${NC}"
+mkdir -p scalability
+cat > scalability/load_balancer.conf << 'EOF'
+# HAProxy configuration for OSIS-PRO
+frontend http_front
+    bind *:80
+    default_backend backends
+
+backend backends
+    balance roundrobin
+    server backend1 127.0.0.1:8000 check
+    server backend2 127.0.0.1:8002 check
+    server backend3 127.0.0.1:8003 check
+EOF
+echo "   ✅ Exemple HAProxy créé"
+
+# ===========================================================================
+# 6. GESTION DES ERREURS ET RÉSILIENCE
+# ===========================================================================
+echo -e "${CYAN}🛡️ 6/10 — Gestion des erreurs${NC}"
+mkdir -p resilience
+cat > resilience/circuit_breaker.py << 'EOF'
+#!/usr/bin/env python3
+"""Circuit Breaker pour appels aux services externes (Korki-Wallet, etc.)"""
+import time
+import functools
+
+class CircuitBreaker:
+    def __init__(self, failure_threshold=3, recovery_timeout=30):
+        self.failure_count = 0
+        self.failure_threshold = failure_threshold
+        self.recovery_timeout = recovery_timeout
+        self.last_failure_time = 0
+        self.state = "CLOSED"
+
+    def __call__(self, func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            if self.state == "OPEN":
+                if time.time() - self.last_failure_time > self.recovery_timeout:
+                    self.state = "HALF_OPEN"
+                else:
+                    raise Exception("Circuit breaker OPEN")
+            try:
+                result = func(*args, **kwargs)
+                if self.state == "HALF_OPEN":
+                    self.state = "CLOSED"
+                    self.failure_count = 0
+                return result
+            except Exception as e:
+                self.failure_count += 1
+                self.last_failure_time = time.time()
+                if self.failure_count >= self.failure_threshold:
+                    self.state = "OPEN"
+                raise e
+        return wrapper
+
+# Exemple : @CircuitBreaker() avant l'appel à Korki-Wallet
+EOF
+echo "   ✅ Circuit breaker créé"
+
+# ===========================================================================
+# 7. GOUVERNANCE
+# ===========================================================================
+echo -e "${CYAN}🏛️ 7/10 — Gouvernance${NC}"
+mkdir -p governance
+cat > governance/proposal.py << 'EOF'
+#!/usr/bin/env python3
+"""Gestion des propositions de gouvernance"""
+import json, os
+from datetime import datetime
+
+PROPOSALS_FILE = "proposals.json"
+
+def load_proposals():
+    if os.path.exists(PROPOSALS_FILE):
+        with open(PROPOSALS_FILE) as f:
+            return json.load(f)
+    return []
+
+def save_proposal(title, author, description):
+    proposals = load_proposals()
+    proposals.append({
+        "id": len(proposals) + 1,
+        "title": title,
+        "author": author,
+        "description": description,
+        "votes_for": 0,
+        "votes_against": 0,
+        "status": "active",
+        "created": datetime.now().isoformat()
+    })
+    with open(PROPOSALS_FILE, 'w') as f:
+        json.dump(proposals, f, indent=2)
+    return proposals[-1]
+
+def vote(proposal_id, voter, support):
+    proposals = load_proposals()
+    # logique de vote...
+EOF
+echo "   ✅ Gouvernance ajoutée"
+
+# ===========================================================================
+# 8. MARKETPLACE DE MODULES
+# ===========================================================================
+echo -e "${CYAN}🛍️ 8/10 — Marketplace de modules${NC}"
+mkdir -p marketplace
+cat > marketplace/server.py << 'EOF'
+#!/usr/bin/env python3
+"""Marketplace OSIS-PRO : modules additionnels payants/gratuits"""
+import json
+from flask import Flask, jsonify, request
+
+app = Flask(__name__)
+
+MODULES = [
+    {"id": "osis-pay", "name": "Passerelle de paiement", "price": 0, "author": "OSIS Core"},
+    {"id": "osis-iot", "name": "IoT Bridge", "price": 500, "author": "OSIS Labs"},
+]
+
+@app.route('/api/marketplace')
+def list_modules():
+    return jsonify(MODULES)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=8705, debug=False)
+EOF
+echo "   ✅ Marketplace prête"
+
+# ===========================================================================
+# 9. AUDIT DE SÉCURITÉ
+# ===========================================================================
+echo -e "${CYAN}🔒 9/10 — Audit de sécurité${NC}"
+mkdir -p security
+cat > security/audit_checklist.md << 'EOF'
+# Checklist Audit de Sécurité OSIS-PRO
+
+- [x] Hachage PBKDF2 avec sel
+- [x] JWT avec expiration + refresh
+- [x] Rate limiting par IP
+- [ ] Test d'intrusion complet
+- [ ] Audit externe par un tiers
+- [ ] Vérification OWASP Top 10
+- [ ] Scan des dépendances (pip-audit)
+EOF
+echo "   ✅ Checklist sécurité"
+
+# ===========================================================================
+# 10. INTERNATIONALISATION (i18n)
+# ===========================================================================
+echo -e "${CYAN}🌍 10/10 — Internationalisation${NC}"
+mkdir -p i18n
+cat > i18n/strings.json << 'EOF'
+{
+  "fr": {
+    "welcome": "Bienvenue sur OSIS-PRO",
+    "balance": "Solde",
+    "donate": "Faire un don",
+    "login": "Se connecter"
+  },
+  "en": {
+    "welcome": "Welcome to OSIS-PRO",
+    "balance": "Balance",
+    "donate": "Donate",
+    "login": "Login"
+  },
+  "bambara": {
+    "welcome": "I ni ce OSIS-PRO",
+    "balance": "Wariko",
+    "donate": "Ka don kɛ",
+    "login": "Ka don"
+  }
+}
+EOF
+echo "   ✅ Fichier de traductions créé"
+
+# ===========================================================================
+# RÉCAPITULATIF
+# ===========================================================================
+echo ""
+echo -e "${GREEN}════════════════════════════════════════════════${NC}"
+echo -e "${GREEN}  ✅ Tous les modules restants ont été créés !${NC}"
+echo -e "${GREEN}════════════════════════════════════════════════${NC}"
+echo ""
+echo "📁 Nouveaux dossiers :"
+echo "  docs/          — Documentation complète"
+echo "  admin/         — Interface d'administration (port 8001)"
+echo "  monitoring/    — Configuration Prometheus"
+echo "  performance/   — Cache Redis"
+echo "  scalability/   — Exemple HAProxy"
+echo "  resilience/    — Circuit breaker"
+echo "  governance/    — Propositions et votes"
+echo "  marketplace/   — Marketplace de modules"
+echo "  security/      — Checklist audit"
+echo "  i18n/          — Traductions (fr, en, bambara)"
+echo ""
+echo "Prochaine étape :"
+echo "  - Remplissez les fichiers avec le contenu détaillé"
+echo "  - Lancez l'admin : cd admin && python3 app.py"
+echo "  - Ajoutez Prometheus pour le monitoring"
+echo "  - Testez le circuit breaker et le cache"
